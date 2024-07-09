@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Colorful Transparent Cubes Display</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        #container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <!-- Include Three.js and OrbitControls from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // Create scene, camera, and renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        // Add OrbitControls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        // Add lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 2);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+        directionalLight.position.set(0, 1, 1).normalize();
+        scene.add(directionalLight);
+
+        const createCube = (size, color, opacity, position) => {
+    const geometry = new THREE.BoxGeometry(size, size, size);
+    const materials = [
+        new THREE.MeshBasicMaterial({ color: color.front, transparent: true, opacity: opacity }), // front
+        new THREE.MeshBasicMaterial({ color: color.back, transparent: true, opacity: opacity }),  // back
+        new THREE.MeshBasicMaterial({ color: color.top, transparent: true, opacity: opacity }),   // top
+        new THREE.MeshBasicMaterial({ color: color.bottom, transparent: true, opacity: opacity }),// bottom
+        new THREE.MeshBasicMaterial({ color: color.left, transparent: true, opacity: opacity }),  // left
+        new THREE.MeshBasicMaterial({ color: color.right, transparent: true, opacity: opacity })  // right
+    ];
+    const cube = new THREE.Mesh(geometry, materials);
+    cube.position.set(position.x, position.y, position.z);
+    return cube;
+};
+
+const colors = {
+    front: 0xffffff,  // White
+    back: 0xb71234,   // Red
+    top: 0xffd500,    // Yellow
+    bottom: 0xff5800, // Orange
+    left: 0x009b48,   // Green
+    right: 0x0046ad   // Blue
+};
+
+const cubes = [];
+for (let x = -1; x <= 1; x++) {
+    for (let y = -1; y <= 1; y++) {
+        for (let z = -1; z <= 1; z++) {
+            let cubeColors = {
+                front: (z === 1) ? colors.front : 0xffffff,
+                back: (z === -1) ? colors.back : 0xb71234,
+                top: (y === 1) ? colors.top : 0xffd500,
+                bottom: (y === -1) ? colors.bottom : 0xff5800,
+                left: (x === -1) ? colors.left : 0x009b48,
+                right: (x === 1) ? colors.right : 0x0046ad
+            };
+            cubes.push(createCube(1, cubeColors, 0.5, { x: x * 1.05, y: y * 1.05, z: z * 1.05 }));
+        }
+    }
+}
+
+cubes.forEach(cube => scene.add(cube));
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();  // Update controls in the animation loop
+            renderer.render(scene, camera);
+        }
+
+        // Adjust camera position
+        camera.position.z = 8;
+
+        // Handle window resize
+        window.addEventListener('resize', function () {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start animation
+        animate();
+
+    </script>
+</body>
+</html>
