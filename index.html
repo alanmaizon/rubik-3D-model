@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garage</title>
+    <title>Rubik Cube 3D Model</title>
     <style>
         body {
             margin: 0;
@@ -35,6 +35,9 @@
 
         // Add OrbitControls
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        // Set the initial camera position
+        camera.position.z = 5;
 
         // Add lighting
         const ambientLight = new THREE.AmbientLight(0x404040, 2);
@@ -84,27 +87,33 @@ for (let x = -1; x <= 1; x++) {
     }
 }
 
-cubes.forEach(cube => scene.add(cube));
 
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();  // Update controls in the animation loop
-            renderer.render(scene, camera);
-        }
+const rubikCube = new THREE.Group();
+cubes.forEach(cube => rubikCube.add(cube));
+scene.add(rubikCube);
 
-        // Adjust camera position
-        camera.position.z = 8;
+const animate = () => {
+    requestAnimationFrame(animate);
 
-        // Handle window resize
-        window.addEventListener('resize', function () {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+    // Rotate the Rubik's cube slowly
+    rubikCube.rotation.x += 0.01;
+    rubikCube.rotation.y += 0.01;
 
-        // Start animation
-        animate();
+    renderer.render(scene, camera);
+};
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+});
+
+
+animate();
 
     </script>
 </body>
