@@ -12,9 +12,12 @@
     <style>
         body { 
             margin: 0; 
-            overflow: hidden; 
+            overflow: hidden;
             font-family: 'Rubik', sans-serif;
-            background-color: #1a1a1a; 
+            background-color: #1a1a1a;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none;     /* IE 10+ and Edge */
+            user-select: none;         /* Standard syntax */
         }
         #container { width: 100vw; height: 100vh; }
         #title {
