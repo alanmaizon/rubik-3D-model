@@ -3,118 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rubik Cube 3D Model</title>
+    <title>Rubikon - 4x4 Cube Sequencer</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap" rel="stylesheet">
+
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: 'Rubik', sans-serif;
+            background-color: #1a1a1a; 
         }
-        #container {
-            width: 100vw;
-            height: 100vh;
+        #container { width: 100vw; height: 100vh; }
+        #title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3.5em;
+            color: #fff;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+            z-index: 10;
+            pointer-events: none; /* Make title non-interactive */
+        }
+
+        /* --- New Side Menu Styles --- */
+        #side-menu {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            z-index: 20;
             display: flex;
-            justify-content: center;
             align-items: center;
-            background-color: #000;
         }
+        #menu-toggle-btn {
+            width: 50px;
+            height: 100px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px 0 0 8px;
+            cursor: pointer;
+            font-size: 16px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .menu-content {
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            padding: 20px;
+            border-radius: 8px 0 0 8px;
+            border: 1px solid #0056b3;
+            border-right: none;
+            display: flex;
+            gap: 20px;
+            transition: max-width 0.5s ease-in-out, padding 0.5s ease-in-out;
+            max-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        #side-menu.is-open .menu-content {
+            max-width: 800px; /* Animate to this width */
+            padding: 20px;
+        }
+        /* --- End Side Menu Styles --- */
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+        .grid-title {
+            grid-column: 1 / -1;
+            color: white;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        button, select, input {
+            font-family: 'Rubik', sans-serif;
+            padding: 8px 12px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: 1px solid #0056b3;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #555; cursor: not-allowed; }
+        input[type="number"] { width: 80px; text-align: center; box-sizing: border-box; }
+        label { color: white; font-size: 14px; }
     </style>
+    <script src="https://unpkg.com/tone@14.7.77/build/Tone.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+            }
+        }
+    </script>
 </head>
 <body>
+    <div id="title">Rubikon</div>
     <div id="container"></div>
 
-    <!-- Include Three.js and OrbitControls from CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
-    <script>
-        // Create scene, camera, and renderer
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.getElementById('container').appendChild(renderer.domElement);
+    <div id="side-menu">
+        <button id="menu-toggle-btn">MENU</button>
+        <div class="menu-content">
+            <div class="button-grid">
+                <div class="grid-title">4x4 Controls</div>
+                <button id="btn_U">U</button><button id="btn_u_inner">u</button><button id="btn_u_inner_prime">u'</button><button id="btn_U_prime">U'</button>
+                <button id="btn_L">L</button><button id="btn_l_inner">l</button><button id="btn_l_inner_prime">l'</button><button id="btn_L_prime">L'</button>
+                <button id="btn_R">R</button><button id="btn_r_inner">r</button><button id="btn_r_inner_prime">r'</button><button id="btn_R_prime">R'</button>
+                <button id="btn_D">D</button><button id="btn_d_inner">d</button><button id="btn_d_inner_prime">d'</button><button id="btn_D_prime">D'</button>
+            </div>
 
-        // Add OrbitControls
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            <div class="button-grid">
+                <div class="grid-title">Sequencer</div>
+                <label for="bpmInput" class="grid-title">BPM</label>
+                <input type="number" id="bpmInput" min="60" max="200" value="120" style="grid-column: 1 / -1; padding: 5px;">
+                <div style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0;">
+                    <input type="checkbox" id="halfLengthSwitch">
+                    <label for="halfLengthSwitch">Half Note Length</label>
+                </div>
+                <button id="toggleLoopBtn" style="grid-column: 1 / -1;" disabled>Loading...</button>
+            </div>
 
-        // Set the initial camera position
-        camera.position.z = 5;
+            <div class="button-grid">
+                <div class="grid-title">Master</div>
+                <button id="muteAllBtn" style="grid-column: 1 / 3;">Mute All</button>
+                <button id="unmuteAllBtn" style="grid-column: 3 / 5;">Unmute All</button>
+                <button id="resetCubeBtn" style="grid-column: 1 / -1; margin-top: 5px;">Reset Cube</button>
+                <button id="playRandomBtn" style="grid-column: 1 / -1; margin-top: 5px;">Scramble</button>
+            </div>
+        </div>
+    </div>
 
-        // Add lighting
-        const ambientLight = new THREE.AmbientLight(0x404040, 2);
-        scene.add(ambientLight);
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
-        directionalLight.position.set(0, 1, 1).normalize();
-        scene.add(directionalLight);
-
-        const createCube = (size, color, opacity, position) => {
-    const geometry = new THREE.BoxGeometry(size, size, size);
-    const materials = [
-        new THREE.MeshBasicMaterial({ color: color.front, transparent: true, opacity: opacity }), // front
-        new THREE.MeshBasicMaterial({ color: color.back, transparent: true, opacity: opacity }),  // back
-        new THREE.MeshBasicMaterial({ color: color.top, transparent: true, opacity: opacity }),   // top
-        new THREE.MeshBasicMaterial({ color: color.bottom, transparent: true, opacity: opacity }),// bottom
-        new THREE.MeshBasicMaterial({ color: color.left, transparent: true, opacity: opacity }),  // left
-        new THREE.MeshBasicMaterial({ color: color.right, transparent: true, opacity: opacity })  // right
-    ];
-    const cube = new THREE.Mesh(geometry, materials);
-    cube.position.set(position.x, position.y, position.z);
-    return cube;
-};
-
-const colors = {
-    front: 0xffffff,  // White
-    back: 0xb71234,   // Red
-    top: 0xffd500,    // Yellow
-    bottom: 0xff5800, // Orange
-    left: 0x009b48,   // Green
-    right: 0x0046ad   // Blue
-};
-
-const cubes = [];
-for (let x = -1; x <= 1; x++) {
-    for (let y = -1; y <= 1; y++) {
-        for (let z = -1; z <= 1; z++) {
-            let cubeColors = {
-                front: (z === 1) ? colors.front : 0xffffff,
-                back: (z === -1) ? colors.back : 0xb71234,
-                top: (y === 1) ? colors.top : 0xffd500,
-                bottom: (y === -1) ? colors.bottom : 0xff5800,
-                left: (x === -1) ? colors.left : 0x009b48,
-                right: (x === 1) ? colors.right : 0x0046ad
-            };
-            cubes.push(createCube(1, cubeColors, 0.5, { x: x * 1.05, y: y * 1.05, z: z * 1.05 }));
-        }
-    }
-}
-
-
-const rubikCube = new THREE.Group();
-cubes.forEach(cube => rubikCube.add(cube));
-scene.add(rubikCube);
-
-const animate = () => {
-    requestAnimationFrame(animate);
-
-    // Rotate the Rubik's cube slowly
-    rubikCube.rotation.x += 0.01;
-    rubikCube.rotation.y += 0.01;
-
-    renderer.render(scene, camera);
-};
-
-    // Handle window resize
-    window.addEventListener('resize', () => {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-
-    renderer.setSize(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-});
-
-
-animate();
-
-    </script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
