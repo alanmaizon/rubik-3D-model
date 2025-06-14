@@ -11,6 +11,7 @@ let allCubies = [];
 let currentBaseNoteDuration = '16n';
 let isHalfLength = false;
 let touchStartX, touchStartY, isDragging;
+let touchStartTime; 
 
 // --- Constants ---
 const CUBE_COLORS = { WHITE: 0xffffff, RED: 0xb71234, YELLOW: 0xffd500, ORANGE: 0xff5800, GREEN: 0x009b48, BLUE: 0x0046ad, BLACK: 0x111111 };
@@ -272,37 +273,42 @@ function getFrontFaceStickers() {
     updateAllMuteVisuals();
 }
 
-
-// --- NEW: Mobile Touch Handling ---
 function handleTouchStart(event) {
+    // Record the starting time and position of the touch
+    touchStartTime = Date.now();
     isDragging = false;
-    // Only consider the first touch
     const touch = event.touches[0];
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
 }
 
 function handleTouchMove(event) {
-    // If we've already determined it's a drag, do nothing more.
-    if (isDragging) return;
+    if (isDragging) return; // If we already know it's a drag, no need to check again.
+    
     const touch = event.touches[0];
     const deltaX = Math.abs(touch.clientX - touchStartX);
     const deltaY = Math.abs(touch.clientY - touchStartY);
-    // If the touch has moved more than a few pixels, it's a drag, not a tap.
-    if (deltaX > 5 || deltaY > 5) {
+
+    // INCREASED: The drag threshold is now more generous (10 pixels instead of 5).
+    if (deltaX > 10 || deltaY > 10) {
         isDragging = true;
     }
 }
 
 function handleTouchEnd(event) {
-    // If the touch was a drag, don't treat it as a tap.
-    if (isDragging) {
-        isDragging = false; // Reset for next touch
-        return;
+    // Calculate the total duration of the touch
+    const touchDuration = Date.now() - touchStartTime;
+
+    // A valid "tap" must meet TWO conditions:
+    // 1. It was NOT a drag (the finger didn't move far).
+    // 2. It was very QUICK (less than 250 milliseconds).
+    if (!isDragging && touchDuration < 250) {
+        // If both conditions are met, treat it as a tap/click.
+        handleCanvasClick(event.changedTouches[0]);
     }
-    // It was a tap, so we can treat it like a click for raycasting.
-    // We pass the last known touch position to the click handler.
-    handleCanvasClick(event.changedTouches[0]);
+    
+    // Reset the dragging flag for the next interaction.
+    isDragging = false;
 }
 
 
