@@ -94,8 +94,19 @@ function setupEventListeners() {
     document.getElementById('unmuteAllBtn')?.addEventListener('click', () => muteAllStickers(false));
     
     const bpmInput = document.getElementById('bpmInput');
-    Tone.Transport.bpm.value = bpmInput.value;
-    bpmInput.addEventListener('input', (e) => { Tone.Transport.bpm.value = Math.max(60, Math.min(200, parseInt(e.target.value) || 120)); });
+    const bpmSlider = document.getElementById('bpmSlider');
+
+    const setBpm = (value) => {
+        const bpm = Math.max(20, Math.min(200, parseInt(value) || 120));
+        Tone.Transport.bpm.value = bpm;
+        bpmInput.value = bpm;
+        bpmSlider.value = bpm;
+    };
+
+    bpmInput.addEventListener('input', (e) => setBpm(e.target.value));
+    bpmSlider.addEventListener('input', (e) => setBpm(e.target.value));
+    
+    setBpm(120); // Set initial BPM
 
     // NEW: Event listener for the half-length switch
     const halfLengthSwitch = document.getElementById('halfLengthSwitch');
